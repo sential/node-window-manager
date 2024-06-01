@@ -36,6 +36,23 @@ export class Window {
     return bounds;
   }
 
+  getAccurateBounds(): IRectangle {
+    if (!addon) return;
+
+    const bounds = addon.getWindowAccurateBounds(this.id);
+
+    if (process.platform === "win32") {
+      const sf = this.getMonitor().getScaleFactor();
+
+      bounds.x = Math.floor(bounds.x / sf);
+      bounds.y = Math.floor(bounds.y / sf);
+      bounds.width = Math.floor(bounds.width / sf);
+      bounds.height = Math.floor(bounds.height / sf);
+    }
+
+    return bounds;
+  }
+
   setBounds(bounds: IRectangle) {
     if (!addon) return;
 

@@ -4,7 +4,10 @@
 #include <napi.h>
 #include <shtypes.h>
 #include <string>
+#include <dwmapi.h>
 #include <windows.h>
+
+#pragma comment (lib, "Dwmapi")
 
 typedef int (__stdcall* lp_GetScaleFactorForMonitor) (HMONITOR, DEVICE_SCALE_FACTOR*);
 
@@ -190,6 +193,24 @@ Napi::Object getWindowBounds (const Napi::CallbackInfo& info) {
 
     RECT rect{};
     GetWindowRect (handle, &rect);
+
+    Napi::Object bounds{ Napi::Object::New (env) };
+
+    bounds.Set ("x", rect.left);
+    bounds.Set ("y", rect.top);
+    bounds.Set ("width", rect.right - rect.left);
+    bounds.Set ("height", rect.bottom - rect.top);
+
+    return bounds;
+}
+
+Napi::Object getWindowAccurateBounds (const Napi::CallbackInfo& info) {
+    Napi::Env env{ info.Env () };
+
+    auto handle{ getValueFromCallbackData<HWND> (info, 0) };
+
+    RECT rect{};
+    DwmGetWindowAttribute (handle, DWMWA_EXTENDED_FRAME_BOUNDS, &rect, sizeof(RECT));
 
     Napi::Object bounds{ Napi::Object::New (env) };
 
@@ -411,6 +432,7 @@ Napi::Object Init (Napi::Env env, Napi::Object exports) {
     exports.Set (Napi::String::New (env, "setWindowOwner"), Napi::Function::New (env, setWindowOwner));
     exports.Set (Napi::String::New (env, "initWindow"), Napi::Function::New (env, initWindow));
     exports.Set (Napi::String::New (env, "getWindowBounds"), Napi::Function::New (env, getWindowBounds));
+    exports.Set (Napi::String::New (env, "getWindowAccurateBounds"), Napi::Function::New (env, getWindowAccurateBounds));
     exports.Set (Napi::String::New (env, "getWindowTitle"), Napi::Function::New (env, getWindowTitle));
     exports.Set (Napi::String::New (env, "getWindowOwner"), Napi::Function::New (env, getWindowOwner));
     exports.Set (Napi::String::New (env, "getWindowOpacity"), Napi::Function::New (env, getWindowOpacity));
